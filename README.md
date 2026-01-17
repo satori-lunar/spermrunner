@@ -1,41 +1,46 @@
-# Spermrunner 🏊
+# StreamRacer ✨
 
-A mobile-friendly web racing game where you compete as a sperm racing to reach the egg. Built with Phaser 3 and deployed on Vercel.
+A whimsical mobile-friendly web racing game where you guide a glowing pod through colorful abstract tunnels to reach the Energy Core!
 
 ## Game Overview
 
-Race through 8 increasingly challenging stages over approximately 30 minutes of gameplay. Bump rivals off course, avoid obstacles, collect powerups, and be the first to reach the egg!
+Race through 8 vibrant stages over approximately 30 minutes of gameplay. Bump playful rivals, avoid floating obstacles, collect sparkly powerups, and be the first to reach the glowing Energy Core!
 
 ## Features
 
-### Core Mechanics
-- **Steering**: Touch joystick (left side) or arrow keys/WASD
-- **Boost**: Tap boost button (right side) or spacebar for speed burst
-- **Bumping**: Collide with rivals to knock them off course
-- **Obstacles**: Debris, mucus walls, and moving hazards
-- **Currents**: Flowing areas that push you off course
+### Visual Style
+- **Playful & Abstract**: Bright colors, rounded shapes, smooth motion
+- **Glowing Pods**: Cute swimmer-like characters with flowing ribbon trails
+- **Flowing Tunnels**: Soft gradients and atmospheric particle effects
+- **Energy Core Goal**: Pulsing golden core with orbiting sparkles
 
-### AI Rivals
-Four distinct rival archetypes:
-- **Aggressive** (Red): Fast and bumps frequently
-- **Defensive** (Blue): Blocks lanes, hard to pass
-- **Slippery** (Yellow): Very fast but avoids contact
-- **Blocker** (Orange): Slow but wide, blocks the path
+### Core Mechanics
+- **Smooth Touch Controls**: Drag anywhere to steer fluidly
+- **Boost Button**: Tap for a burst of speed with particle effects
+- **Bumping**: Collide with rivals to slow them down
+- **Flowing Currents**: Energy streams that push you off course
+
+### Rival Pods
+Four distinct character types:
+- **Swift** (Pink): Quick and nimble
+- **Steady** (Blue): Consistent and reliable
+- **Bouncy** (Orange): Loves to bump!
+- **Floaty** (Purple): Drifts gracefully
 
 ### Powerups
-- ⚡ **Speed Boost**: Instant boost recharge
-- 🛡️ **Shield**: Temporary immunity to knockback
-- 💚 **Sticky Trap**: Drop trap to slow rivals
+- ⚡ **Speed Burst**: Instant energy boost
+- 🛡️ **Shield Bubble**: Protected from knockback
+- ⭐ **Star Trail**: Leave sparkles behind
 
-### 8 Stages of Increasing Difficulty
-1. **The Beginning** - Tutorial-lite, wide lanes
-2. **First Challenge** - More rivals join
-3. **Turbulent Waters** - Currents introduced
-4. **The Maze** - Tight turns and choke points
-5. **The Gauntlet** - Aggressive rivals
-6. **Chaos Zone** - Obstacles everywhere
-7. **The Needle** - Narrow lanes, high speed
-8. **The Final Sprint** - Everything at maximum!
+### 8 Stages
+1. **Gentle Stream** - A calm beginning
+2. **Bubbling Rapids** - The pace picks up
+3. **Swirling Currents** - Watch for drifting streams
+4. **Crystal Caverns** - Navigate the shimmering maze
+5. **Neon Rush** - Speed through the glow
+6. **Cosmic Chaos** - Everything is moving
+7. **Starlight Sprint** - Race among the stars
+8. **The Core Awaits** - The energy core is near!
 
 ## Development
 
@@ -63,8 +68,6 @@ Open http://localhost:3000 in your browser.
 npm run build
 ```
 
-The built files will be in the `dist` folder.
-
 ## Deployment (Vercel)
 
 This project is configured for Vercel deployment:
@@ -72,12 +75,6 @@ This project is configured for Vercel deployment:
 1. Connect your GitHub repository to Vercel
 2. Vercel will auto-detect the Vite configuration
 3. Deploy!
-
-Or deploy manually:
-
-```bash
-npx vercel
-```
 
 ## Tech Stack
 
@@ -89,23 +86,12 @@ npx vercel
 ## Controls
 
 ### Mobile (Touch)
-- **Left side of screen**: Touch and drag to steer
-- **Right boost button**: Tap to activate speed boost
+- **Touch & drag**: Steer your pod smoothly
+- **Boost button**: Tap for speed burst
 
 ### Desktop (Keyboard)
 - **Arrow keys / WASD**: Steer
 - **Spacebar**: Boost
-
-## Game Design
-
-### Difficulty Progression
-- Stages 1-2: Learn basics, few rivals, wide tracks
-- Stages 3-4: Introduce currents, tighter turns
-- Stages 5-6: Aggressive AI, mixed obstacles
-- Stages 7-8: Maximum challenge, narrow lanes, high speed
-
-### Target Duration
-~30 minutes for a complete playthrough (8 stages × ~3.75 minutes each)
 
 ## File Structure
 
@@ -113,18 +99,18 @@ npx vercel
 src/
 ├── main.js              # Entry point, Phaser config
 ├── config/
-│   └── GameConfig.js    # Game settings, difficulty curves
+│   └── GameConfig.js    # Colors, settings, difficulty
 ├── entities/
-│   ├── Player.js        # Player sperm entity
-│   ├── Rival.js         # AI rival sperms
-│   ├── Obstacle.js      # Obstacles, currents, powerups
-│   └── Track.js         # Track generation
+│   ├── Player.js        # Glowing pod with ribbon trail
+│   ├── Rival.js         # Colorful AI pods
+│   ├── Obstacle.js      # Bubbles, crystals, floaters
+│   └── Track.js         # Flowing tunnel generation
 ├── scenes/
-│   ├── MenuScene.js     # Main menu
+│   ├── MenuScene.js     # Whimsical main menu
 │   └── GameScene.js     # Core gameplay
 └── ui/
-    ├── TouchControls.js # Virtual joystick & boost
-    └── HUD.js           # Heads-up display
+    ├── TouchControls.js # Smooth touch steering
+    └── HUD.js           # Playful interface
 ```
 
 ## License

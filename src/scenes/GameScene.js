@@ -463,8 +463,8 @@ export class GameScene extends Phaser.Scene {
     this.isGameOver = true;
     this.hasWon = true;
     
-    // Place egg at current position
-    this.track.placeEgg(this.player.y - 200);
+    // Place energy core at current position
+    this.track.placeEnergyCore(this.player.y - 200);
     
     // Save best time
     this.saveBestTime();
@@ -477,19 +477,19 @@ export class GameScene extends Phaser.Scene {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
     
-    // Overlay
+    // Overlay with gradient
     const overlay = this.add.graphics();
     overlay.setScrollFactor(0);
     overlay.setDepth(1200);
-    overlay.fillStyle(0x000000, 0.85);
-    overlay.fillRect(0, 0, width, height);
+    overlay.fillStyle(0x0d1b2a, 0.9);
+    overlay.fillRoundedRect(20, height * 0.2, width - 40, height * 0.6, 25);
     
     // Victory text
-    const victoryText = this.add.text(width / 2, height * 0.3, 'YOU REACHED THE EGG!', {
-      fontFamily: '"Courier New", monospace',
-      fontSize: '28px',
-      color: '#00ff88',
-      stroke: '#000',
+    const victoryText = this.add.text(width / 2, height * 0.32, '🎉 ENERGY CORE REACHED! 🎉', {
+      fontFamily: 'Georgia, serif',
+      fontSize: '22px',
+      color: '#ffd700',
+      stroke: '#0d1b2a',
       strokeThickness: 4
     }).setOrigin(0.5);
     victoryText.setScrollFactor(0);
@@ -499,21 +499,30 @@ export class GameScene extends Phaser.Scene {
     const minutes = Math.floor(this.elapsedTime / 60000);
     const seconds = Math.floor((this.elapsedTime % 60000) / 1000);
     const timeText = this.add.text(width / 2, height * 0.45, 
-      `Time: ${minutes}:${seconds.toString().padStart(2, '0')}`, {
-      fontFamily: '"Courier New", monospace',
-      fontSize: '24px',
+      `⏱ Time: ${minutes}:${seconds.toString().padStart(2, '0')}`, {
+      fontFamily: 'Georgia, serif',
+      fontSize: '20px',
       color: '#ffffff'
     }).setOrigin(0.5);
     timeText.setScrollFactor(0);
     timeText.setDepth(1201);
     
+    // Celebration text
+    const celebText = this.add.text(width / 2, height * 0.55, '✨ You are a champion! ✨', {
+      fontFamily: 'Georgia, serif',
+      fontSize: '16px',
+      color: '#80deea'
+    }).setOrigin(0.5);
+    celebText.setScrollFactor(0);
+    celebText.setDepth(1201);
+    
     // Play again button
-    const playAgain = this.add.text(width / 2, height * 0.65, 'PLAY AGAIN', {
-      fontFamily: '"Courier New", monospace',
-      fontSize: '22px',
-      color: '#00ff88',
-      backgroundColor: '#2d1a4c',
-      padding: { x: 20, y: 10 }
+    const playAgain = this.add.text(width / 2, height * 0.7, '🚀 RACE AGAIN', {
+      fontFamily: 'Georgia, serif',
+      fontSize: '18px',
+      color: '#00ffcc',
+      backgroundColor: '#1a0533',
+      padding: { x: 25, y: 12 }
     }).setOrigin(0.5);
     playAgain.setScrollFactor(0);
     playAgain.setDepth(1201);
@@ -522,13 +531,14 @@ export class GameScene extends Phaser.Scene {
       this.scene.start('MenuScene');
     });
     
-    // Egg animation
+    // Pulsing animation
     this.tweens.add({
       targets: victoryText,
-      scale: 1.1,
-      duration: 500,
+      scale: 1.05,
+      duration: 600,
       yoyo: true,
-      repeat: -1
+      repeat: -1,
+      ease: 'Sine.easeInOut'
     });
   }
   
@@ -570,7 +580,7 @@ export class GameScene extends Phaser.Scene {
         elapsedTime: this.elapsedTime,
         totalDistance: this.totalDistanceTraveled
       };
-      localStorage.setItem('spermrunner_progress', JSON.stringify(data));
+      localStorage.setItem('streamracer_progress', JSON.stringify(data));
     } catch (e) {
       console.log('Could not save progress');
     }
@@ -578,15 +588,15 @@ export class GameScene extends Phaser.Scene {
   
   saveBestTime() {
     try {
-      const saved = localStorage.getItem('spermrunner_progress');
+      const saved = localStorage.getItem('streamracer_progress');
       const data = saved ? JSON.parse(saved) : {};
       
       if (!data.bestTime || this.elapsedTime < data.bestTime) {
         data.bestTime = this.elapsedTime;
       }
       
-      data.currentStage = 1; // Reset stage progress
-      localStorage.setItem('spermrunner_progress', JSON.stringify(data));
+      data.currentStage = 1;
+      localStorage.setItem('streamracer_progress', JSON.stringify(data));
     } catch (e) {
       console.log('Could not save best time');
     }

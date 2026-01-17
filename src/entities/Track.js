@@ -1,4 +1,4 @@
-// Track generation and management
+// Track - Flowing abstract tunnels with soft gradients
 import { GAME_CONFIG, STAGE_CONFIG, OBSTACLE_TYPES, POWERUP_TYPES } from '../config/GameConfig.js';
 import { Obstacle, Current, Powerup } from './Obstacle.js';
 
@@ -6,33 +6,47 @@ export class Track {
   constructor(scene) {
     this.scene = scene;
     
-    // Track segments (generated as player progresses)
+    // Track segments
     this.segments = [];
     this.obstacles = [];
     this.currents = [];
     this.powerups = [];
     
-    // Current generation state
+    // Generation state
     this.lastSegmentY = 0;
     this.currentStage = 0;
     this.segmentsGenerated = 0;
     
     // Graphics layers
+    this.bgGraphics = scene.add.graphics();
     this.floorGraphics = scene.add.graphics();
     this.wallGraphics = scene.add.graphics();
+    this.decorGraphics = scene.add.graphics();
     
-    // Egg (finish line) - will be placed at the end
-    this.eggGraphics = null;
-    this.eggY = null;
+    // Energy Core (goal)
+    this.coreGraphics = null;
+    this.coreY = null;
+    this.coreAnimTime = 0;
     
-    // Track width cache
+    // Floating particles for atmosphere
+    this.bgParticles = [];
+    for (let i = 0; i < 40; i++) {
+      this.bgParticles.push({
+        x: Math.random() * scene.cameras.main.width,
+        y: Math.random() * 2000 - 1000,
+        size: 1 + Math.random() * 3,
+        speed: 10 + Math.random() * 30,
+        alpha: 0.1 + Math.random() * 0.3,
+        drift: (Math.random() - 0.5) * 20
+      });
+    }
+    
     this.currentWidth = GAME_CONFIG.TRACK.BASE_WIDTH;
   }
   
   generateInitialTrack(stageConfig) {
     this.currentStage = stageConfig.stage - 1;
     
-    // Generate initial segments ahead of player
     for (let i = 0; i < 10; i++) {
       this.generateSegment(stageConfig);
     }
@@ -44,18 +58,16 @@ export class Track {
     const segmentLength = GAME_CONFIG.TRACK.SEGMENT_LENGTH;
     const baseWidth = GAME_CONFIG.TRACK.BASE_WIDTH * stageConfig.trackWidth;
     
-    // Calculate turn for this segment
+    // Smooth turn calculation
     let turnOffset = 0;
     if (Math.random() < stageConfig.turnFrequency) {
-      turnOffset = (Math.random() - 0.5) * baseWidth * stageConfig.turnSharpness;
+      turnOffset = (Math.random() - 0.5) * baseWidth * stageConfig.turnSharpness * 0.8;
     }
     
-    // Previous segment end position
     const prevSegment = this.segments[this.segments.length - 1];
     const startX = prevSegment ? prevSegment.endX : this.scene.cameras.main.width / 2;
     const startY = prevSegment ? prevSegment.endY : 0;
     
-    // Calculate end position with clamping to prevent going off screen
     const screenWidth = this.scene.cameras.main.width;
     const margin = baseWidth / 2 + 20;
     let endX = startX + turnOffset;
@@ -68,22 +80,21 @@ export class Track {
       endX: endX,
       endY: startY - segmentLength,
       width: baseWidth,
-      isCheckpoint: this.segmentsGenerated % GAME_CONFIG.TRACK.CHECKPOINT_INTERVAL === 0
+      isCheckpoint: this.segmentsGenerated % GAME_CONFIG.TRACK.CHECKPOINT_INTERVAL === 0,
+      // Color variation for visual interest
+      hueShift: Math.sin(this.segmentsGenerated * 0.1) * 0.1
     };
     
     this.segments.push(segment);
     this.segmentsGenerated++;
     
-    // Generate obstacles for this segment
     this.generateObstaclesForSegment(segment, stageConfig);
     
-    // Generate currents
     if (Math.random() < stageConfig.currentFrequency) {
       this.generateCurrentForSegment(segment);
     }
     
-    // Occasionally spawn powerups
-    if (Math.random() < 0.1) {
+    if (Math.random() < 0.12) {
       this.generatePowerupForSegment(segment);
     }
     
@@ -91,21 +102,16 @@ export class Track {
   }
   
   generateObstaclesForSegment(segment, stageConfig) {
-    const obstacleChance = stageConfig.obstacleFrequency;
-    
-    // Multiple obstacle chances per segment
     const numChecks = 3;
     for (let i = 0; i < numChecks; i++) {
-      if (Math.random() < obstacleChance) {
-        // Pick random obstacle type
+      if (Math.random() < stageConfig.obstacleFrequency) {
         const types = Object.values(OBSTACLE_TYPES);
         const type = types[Math.floor(Math.random() * types.length)];
         
-        // Random position within segment
         const progress = (i + 0.5) / numChecks;
         const y = Phaser.Math.Linear(segment.startY, segment.endY, progress);
         const centerX = Phaser.Math.Linear(segment.startX, segment.endX, progress);
-        const x = centerX + (Math.random() - 0.5) * segment.width * 0.7;
+        const x = centerX + (Math.random() - 0.5) * segment.width * 0.6;
         
         const obstacle = new Obstacle(this.scene, x, y, type);
         this.obstacles.push(obstacle);
@@ -117,19 +123,18 @@ export class Track {
     const centerX = (segment.startX + segment.endX) / 2;
     const centerY = (segment.startY + segment.endY) / 2;
     
-    // Random direction (mostly horizontal to push off course)
     const dirX = Math.random() > 0.5 ? 1 : -1;
-    const dirY = (Math.random() - 0.5) * 0.5;
+    const dirY = (Math.random() - 0.5) * 0.4;
     
     const current = new Current(
       this.scene,
       centerX,
       centerY,
-      segment.width * 0.8,
-      GAME_CONFIG.TRACK.SEGMENT_LENGTH * 0.4,
+      segment.width * 0.7,
+      GAME_CONFIG.TRACK.SEGMENT_LENGTH * 0.35,
       dirX,
       dirY,
-      150
+      130
     );
     
     this.currents.push(current);
@@ -141,14 +146,17 @@ export class Track {
     
     const centerX = (segment.startX + segment.endX) / 2;
     const y = (segment.startY + segment.endY) / 2;
-    const x = centerX + (Math.random() - 0.5) * segment.width * 0.5;
+    const x = centerX + (Math.random() - 0.5) * segment.width * 0.4;
     
     const powerup = new Powerup(this.scene, x, y, type);
     this.powerups.push(powerup);
   }
   
   update(cameraY, stageConfig) {
-    // Generate new segments as camera moves
+    const delta = this.scene.game.loop.delta;
+    this.coreAnimTime += delta;
+    
+    // Generate new segments
     const lastSegment = this.segments[this.segments.length - 1];
     const lookAhead = this.scene.cameras.main.height * 2;
     
@@ -156,37 +164,52 @@ export class Track {
       this.generateSegment(stageConfig);
     }
     
-    // Update obstacles
+    // Update all entities
     for (const obstacle of this.obstacles) {
-      obstacle.update(this.scene.game.loop.delta);
+      obstacle.update(delta);
     }
     
-    // Update currents
     for (const current of this.currents) {
-      current.update(this.scene.game.loop.delta);
+      current.update(delta);
     }
     
-    // Update powerups
     for (const powerup of this.powerups) {
       if (powerup.active) {
-        powerup.update(this.scene.game.loop.delta);
+        powerup.update(delta);
       }
     }
     
-    // Clean up off-screen elements
+    // Update background particles
+    this.updateBgParticles(cameraY, delta);
+    
+    // Cleanup
     this.cleanup(cameraY);
     
-    // Redraw track
+    // Redraw
     this.draw();
+  }
+  
+  updateBgParticles(cameraY, delta) {
+    const dt = delta / 1000;
+    const height = this.scene.cameras.main.height;
+    
+    for (const p of this.bgParticles) {
+      p.y -= p.speed * dt;
+      p.x += p.drift * dt;
+      
+      // Reset when off screen
+      if (p.y < cameraY - height) {
+        p.y = cameraY + height + 50;
+        p.x = Math.random() * this.scene.cameras.main.width;
+      }
+    }
   }
   
   cleanup(cameraY) {
     const cullDistance = this.scene.cameras.main.height;
     
-    // Remove old segments
     this.segments = this.segments.filter(seg => seg.startY < cameraY + cullDistance);
     
-    // Remove old obstacles
     this.obstacles = this.obstacles.filter(obs => {
       if (obs.y > cameraY + cullDistance) {
         obs.destroy();
@@ -195,7 +218,6 @@ export class Track {
       return true;
     });
     
-    // Remove old currents
     this.currents = this.currents.filter(curr => {
       if (curr.y > cameraY + cullDistance) {
         curr.destroy();
@@ -204,7 +226,6 @@ export class Track {
       return true;
     });
     
-    // Remove old powerups
     this.powerups = this.powerups.filter(pw => {
       if (!pw.active || pw.y > cameraY + cullDistance) {
         pw.destroy();
@@ -215,16 +236,34 @@ export class Track {
   }
   
   draw() {
+    const colors = GAME_CONFIG.COLORS;
+    
+    this.bgGraphics.clear();
     this.floorGraphics.clear();
     this.wallGraphics.clear();
+    this.decorGraphics.clear();
+    
+    // Draw background particles
+    for (const p of this.bgParticles) {
+      this.bgGraphics.fillStyle(0xffffff, p.alpha);
+      this.bgGraphics.fillCircle(p.x, p.y, p.size);
+    }
     
     // Draw each segment
     for (let i = 0; i < this.segments.length - 1; i++) {
       const seg = this.segments[i];
       const nextSeg = this.segments[i + 1];
       
-      // Floor (track surface)
-      this.floorGraphics.fillStyle(GAME_CONFIG.COLORS.TRACK_FLOOR, 1);
+      // Floor with gradient effect
+      const floorColor = Phaser.Display.Color.Interpolate.ColorWithColor(
+        Phaser.Display.Color.ValueToColor(colors.TRACK_FLOOR_1),
+        Phaser.Display.Color.ValueToColor(colors.TRACK_FLOOR_2),
+        100,
+        Math.abs(Math.sin(seg.index * 0.05)) * 100
+      );
+      const floorHex = Phaser.Display.Color.GetColor(floorColor.r, floorColor.g, floorColor.b);
+      
+      this.floorGraphics.fillStyle(floorHex, 0.9);
       this.floorGraphics.beginPath();
       this.floorGraphics.moveTo(seg.startX - seg.width / 2, seg.startY);
       this.floorGraphics.lineTo(seg.startX + seg.width / 2, seg.startY);
@@ -233,8 +272,30 @@ export class Track {
       this.floorGraphics.closePath();
       this.floorGraphics.fillPath();
       
-      // Walls (side boundaries)
-      this.wallGraphics.lineStyle(8, GAME_CONFIG.COLORS.TRACK_WALL, 1);
+      // Soft glowing walls
+      const wallGlow = 8 + Math.sin(seg.index * 0.1) * 3;
+      
+      // Left wall glow
+      this.wallGraphics.fillStyle(colors.TRACK_WALL_GLOW, 0.15);
+      this.wallGraphics.beginPath();
+      this.wallGraphics.moveTo(seg.startX - seg.width / 2 - wallGlow, seg.startY);
+      this.wallGraphics.lineTo(seg.startX - seg.width / 2, seg.startY);
+      this.wallGraphics.lineTo(nextSeg.startX - nextSeg.width / 2, nextSeg.startY);
+      this.wallGraphics.lineTo(nextSeg.startX - nextSeg.width / 2 - wallGlow, nextSeg.startY);
+      this.wallGraphics.closePath();
+      this.wallGraphics.fillPath();
+      
+      // Right wall glow
+      this.wallGraphics.beginPath();
+      this.wallGraphics.moveTo(seg.startX + seg.width / 2, seg.startY);
+      this.wallGraphics.lineTo(seg.startX + seg.width / 2 + wallGlow, seg.startY);
+      this.wallGraphics.lineTo(nextSeg.startX + nextSeg.width / 2 + wallGlow, nextSeg.startY);
+      this.wallGraphics.lineTo(nextSeg.startX + nextSeg.width / 2, nextSeg.startY);
+      this.wallGraphics.closePath();
+      this.wallGraphics.fillPath();
+      
+      // Wall lines
+      this.wallGraphics.lineStyle(3, colors.TRACK_WALL, 0.7);
       this.wallGraphics.lineBetween(
         seg.startX - seg.width / 2, seg.startY,
         nextSeg.startX - nextSeg.width / 2, nextSeg.startY
@@ -244,25 +305,35 @@ export class Track {
         nextSeg.startX + nextSeg.width / 2, nextSeg.startY
       );
       
-      // Checkpoint marker
+      // Checkpoint glow
       if (seg.isCheckpoint) {
-        this.floorGraphics.lineStyle(4, 0x00ffaa, 0.5);
-        this.floorGraphics.lineBetween(
-          seg.startX - seg.width / 2 + 10, seg.startY,
-          seg.startX + seg.width / 2 - 10, seg.startY
+        this.decorGraphics.lineStyle(4, colors.POWERUP_SPEED, 0.4);
+        this.decorGraphics.lineBetween(
+          seg.startX - seg.width / 2 + 15, seg.startY,
+          seg.startX + seg.width / 2 - 15, seg.startY
         );
+        
+        // Checkpoint sparkles
+        for (let j = 0; j < 3; j++) {
+          const sparkX = seg.startX + (j - 1) * (seg.width / 4);
+          this.decorGraphics.fillStyle(0xffffff, 0.5);
+          this.decorGraphics.fillCircle(sparkX, seg.startY, 3);
+        }
       }
+    }
+    
+    // Draw energy core if placed
+    if (this.coreY !== null) {
+      this.drawEnergyCore();
     }
   }
   
   getTrackBoundsAtY(y) {
-    // Find the segment at this Y position
     for (let i = 0; i < this.segments.length - 1; i++) {
       const seg = this.segments[i];
       const nextSeg = this.segments[i + 1];
       
       if (y <= seg.startY && y >= nextSeg.startY) {
-        // Interpolate width and center position
         const t = (seg.startY - y) / (seg.startY - nextSeg.startY);
         const centerX = Phaser.Math.Linear(seg.startX, nextSeg.startX, t);
         const width = Phaser.Math.Linear(seg.width, nextSeg.width, t);
@@ -276,7 +347,6 @@ export class Track {
       }
     }
     
-    // Default bounds if not found
     const screenWidth = this.scene.cameras.main.width;
     return {
       left: 50,
@@ -286,50 +356,88 @@ export class Track {
     };
   }
   
-  placeEgg(y) {
-    this.eggY = y;
+  placeEnergyCore(y) {
+    this.coreY = y;
     
-    // Create egg visual
-    this.eggGraphics = this.scene.add.graphics();
-    this.drawEgg();
+    if (!this.coreGraphics) {
+      this.coreGraphics = this.scene.add.graphics();
+    }
   }
   
-  drawEgg() {
-    if (!this.eggGraphics || this.eggY === null) return;
+  drawEnergyCore() {
+    if (!this.coreGraphics || this.coreY === null) return;
     
+    const colors = GAME_CONFIG.COLORS;
     const x = this.scene.cameras.main.width / 2;
+    const y = this.coreY;
     
-    this.eggGraphics.clear();
+    this.coreGraphics.clear();
     
-    // Glow effect
-    this.eggGraphics.fillStyle(GAME_CONFIG.COLORS.EGG, 0.2);
-    this.eggGraphics.fillCircle(x, this.eggY, 80);
-    this.eggGraphics.fillStyle(GAME_CONFIG.COLORS.EGG, 0.3);
-    this.eggGraphics.fillCircle(x, this.eggY, 60);
+    const pulse = 1 + Math.sin(this.coreAnimTime * 0.003) * 0.15;
+    const rotation = this.coreAnimTime * 0.001;
     
-    // Main egg
-    this.eggGraphics.fillStyle(GAME_CONFIG.COLORS.EGG, 1);
-    this.eggGraphics.fillCircle(x, this.eggY, 40);
+    // Outer glow rings
+    for (let i = 3; i >= 0; i--) {
+      const ringSize = (60 + i * 20) * pulse;
+      const alpha = 0.1 - i * 0.02;
+      this.coreGraphics.fillStyle(colors.GOAL_GLOW, alpha);
+      this.coreGraphics.fillCircle(x, y, ringSize);
+    }
     
-    // Highlight
-    this.eggGraphics.fillStyle(0xffffff, 0.4);
-    this.eggGraphics.fillCircle(x - 10, this.eggY - 10, 12);
+    // Rotating ring
+    this.coreGraphics.lineStyle(3, colors.GOAL_RING, 0.6);
+    this.coreGraphics.beginPath();
+    for (let i = 0; i <= 32; i++) {
+      const angle = (i / 32) * Math.PI * 2 + rotation;
+      const wobble = 1 + Math.sin(angle * 4 + this.coreAnimTime * 0.005) * 0.1;
+      const radius = 50 * wobble * pulse;
+      const px = x + Math.cos(angle) * radius;
+      const py = y + Math.sin(angle) * radius * 0.6; // Flatten for perspective
+      if (i === 0) {
+        this.coreGraphics.moveTo(px, py);
+      } else {
+        this.coreGraphics.lineTo(px, py);
+      }
+    }
+    this.coreGraphics.strokePath();
+    
+    // Inner core
+    this.coreGraphics.fillStyle(colors.GOAL_CORE, 0.9);
+    this.coreGraphics.fillCircle(x, y, 30 * pulse);
+    
+    // Core highlight
+    this.coreGraphics.fillStyle(0xffffff, 0.7);
+    this.coreGraphics.fillCircle(x - 8, y - 8, 10);
+    
+    // Sparkles around core
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2 + rotation * 2;
+      const dist = 45 + Math.sin(this.coreAnimTime * 0.004 + i) * 10;
+      const sx = x + Math.cos(angle) * dist;
+      const sy = y + Math.sin(angle) * dist;
+      const sparkSize = 3 + Math.sin(this.coreAnimTime * 0.006 + i * 2) * 2;
+      
+      this.coreGraphics.fillStyle(0xffffff, 0.8);
+      this.coreGraphics.fillCircle(sx, sy, sparkSize);
+    }
   }
   
-  checkEggCollision(player) {
-    if (this.eggY === null) return false;
+  checkCoreCollision(player) {
+    if (this.coreY === null) return false;
     
     const x = this.scene.cameras.main.width / 2;
     const dx = player.x - x;
-    const dy = player.y - this.eggY;
+    const dy = player.y - this.coreY;
     const dist = Math.sqrt(dx * dx + dy * dy);
     
-    return dist < 50;
+    return dist < 45;
   }
   
   destroy() {
+    this.bgGraphics.destroy();
     this.floorGraphics.destroy();
     this.wallGraphics.destroy();
+    this.decorGraphics.destroy();
     
     for (const obs of this.obstacles) {
       obs.destroy();
@@ -343,8 +451,8 @@ export class Track {
       pw.destroy();
     }
     
-    if (this.eggGraphics) {
-      this.eggGraphics.destroy();
+    if (this.coreGraphics) {
+      this.coreGraphics.destroy();
     }
   }
 }

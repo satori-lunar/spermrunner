@@ -1,4 +1,4 @@
-// Menu Scene - Main menu and start screen
+// Menu Scene - Whimsical, colorful main menu
 import { GAME_CONFIG } from '../config/GameConfig.js';
 
 export class MenuScene extends Phaser.Scene {
@@ -10,50 +10,42 @@ export class MenuScene extends Phaser.Scene {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
     
-    // Animated background
     this.createBackground();
-    
-    // Title
     this.createTitle();
-    
-    // Menu buttons
     this.createButtons();
-    
-    // Animated sperm in background
-    this.createBackgroundAnimation();
-    
-    // Load saved progress
+    this.createFloatingPods();
     this.loadProgress();
   }
   
   createBackground() {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
+    const colors = GAME_CONFIG.COLORS;
     
     // Gradient background
     this.bgGraphics = this.add.graphics();
     
-    // Deep purple to pink gradient (simulated with rectangles)
-    for (let i = 0; i < height; i += 4) {
+    for (let i = 0; i < height; i += 2) {
       const t = i / height;
-      const r = Math.floor(26 + t * 40);
-      const g = Math.floor(10 + t * 20);
-      const b = Math.floor(46 + t * 30);
-      const color = Phaser.Display.Color.GetColor(r, g, b);
+      const color1 = Phaser.Display.Color.ValueToColor(colors.BACKGROUND_TOP);
+      const color2 = Phaser.Display.Color.ValueToColor(colors.BACKGROUND_BOTTOM);
+      const blended = Phaser.Display.Color.Interpolate.ColorWithColor(color1, color2, 100, t * 100);
+      const hex = Phaser.Display.Color.GetColor(blended.r, blended.g, blended.b);
       
-      this.bgGraphics.fillStyle(color, 1);
-      this.bgGraphics.fillRect(0, i, width, 4);
+      this.bgGraphics.fillStyle(hex, 1);
+      this.bgGraphics.fillRect(0, i, width, 2);
     }
     
-    // Floating particles
+    // Sparkle particles
     this.particles = [];
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 50; i++) {
       this.particles.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        size: 2 + Math.random() * 4,
-        speed: 10 + Math.random() * 20,
-        alpha: 0.1 + Math.random() * 0.3
+        size: 1 + Math.random() * 3,
+        speed: 15 + Math.random() * 25,
+        alpha: 0.2 + Math.random() * 0.5,
+        twinkle: Math.random() * Math.PI * 2
       });
     }
     
@@ -63,38 +55,48 @@ export class MenuScene extends Phaser.Scene {
   createTitle() {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
+    const colors = GAME_CONFIG.COLORS;
     
-    // Game title with glow effect - responsive font size
-    const fontSize = Math.min(42, width * 0.1);
-    
-    this.titleGlow = this.add.text(width / 2, height * 0.15, 'SPERMRUNNER', {
-      fontFamily: '"Courier New", monospace',
-      fontSize: `${fontSize}px`,
-      color: '#00ff88',
-      stroke: '#00ff88',
-      strokeThickness: 6
+    // Title glow
+    this.titleGlow = this.add.text(width / 2, height * 0.13, 'STREAMRACER', {
+      fontFamily: '"Comic Sans MS", "Marker Felt", fantasy',
+      fontSize: '36px',
+      color: '#00ffcc',
+      stroke: '#00ffcc',
+      strokeThickness: 8
     }).setOrigin(0.5).setAlpha(0.3);
     
-    this.title = this.add.text(width / 2, height * 0.15, 'SPERMRUNNER', {
-      fontFamily: '"Courier New", monospace',
-      fontSize: `${fontSize}px`,
+    // Main title
+    this.title = this.add.text(width / 2, height * 0.13, 'STREAMRACER', {
+      fontFamily: '"Comic Sans MS", "Marker Felt", fantasy',
+      fontSize: '36px',
       color: '#ffffff',
-      stroke: '#1a0a2e',
-      strokeThickness: 3
+      stroke: '#1a0533',
+      strokeThickness: 4
     }).setOrigin(0.5);
     
     // Subtitle
-    this.subtitle = this.add.text(width / 2, height * 0.22, 'Race to the Egg!', {
-      fontFamily: '"Courier New", monospace',
-      fontSize: '16px',
-      color: '#88ffbb'
+    this.subtitle = this.add.text(width / 2, height * 0.20, '✨ Race to the Energy Core! ✨', {
+      fontFamily: 'Georgia, serif',
+      fontSize: '14px',
+      color: '#80deea'
     }).setOrigin(0.5);
     
-    // Pulsing animation on title
+    // Pulsing glow animation
     this.tweens.add({
       targets: this.titleGlow,
       alpha: 0.5,
-      duration: 1500,
+      duration: 1200,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+    
+    // Floating title animation
+    this.tweens.add({
+      targets: [this.title, this.titleGlow],
+      y: height * 0.13 + 5,
+      duration: 2000,
       yoyo: true,
       repeat: -1,
       ease: 'Sine.easeInOut'
@@ -105,89 +107,90 @@ export class MenuScene extends Phaser.Scene {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
     
-    const buttonY = height * 0.5;
-    const buttonSpacing = 70;
+    const buttonY = height * 0.45;
+    const buttonSpacing = 65;
     
-    // Start Game button
-    this.createButton(
-      width / 2,
-      buttonY,
-      'START RACE',
-      () => this.startGame()
-    );
+    this.createButton(width / 2, buttonY, '🚀 START RACE', () => this.startGame(), 0x00ffcc);
     
-    // Continue button (if saved progress)
     this.continueButton = this.createButton(
       width / 2,
       buttonY + buttonSpacing,
-      'CONTINUE',
+      '📍 CONTINUE',
       () => this.continueGame(),
-      true // Initially hidden
+      0x7c4dff,
+      true
     );
     
-    // How to Play
     this.createButton(
       width / 2,
       buttonY + buttonSpacing * 2,
-      'HOW TO PLAY',
-      () => this.showTutorial()
+      '❓ HOW TO PLAY',
+      () => this.showTutorial(),
+      0xff66aa
     );
     
     // Best time display
-    this.bestTimeText = this.add.text(width / 2, height * 0.85, '', {
-      fontFamily: '"Courier New", monospace',
-      fontSize: '14px',
-      color: '#888888'
+    this.bestTimeText = this.add.text(width / 2, height * 0.88, '', {
+      fontFamily: 'Georgia, serif',
+      fontSize: '13px',
+      color: '#80cbc4'
     }).setOrigin(0.5);
   }
   
-  createButton(x, y, text, callback, hidden = false) {
-    const buttonWidth = 200;
-    const buttonHeight = 50;
+  createButton(x, y, text, callback, accentColor, hidden = false) {
+    const buttonWidth = 180;
+    const buttonHeight = 45;
     
-    // Button container
     const container = this.add.container(x, y);
+    
+    // Button glow
+    const glow = this.add.graphics();
+    glow.fillStyle(accentColor, 0.2);
+    glow.fillRoundedRect(-buttonWidth / 2 - 5, -buttonHeight / 2 - 5, buttonWidth + 10, buttonHeight + 10, 15);
     
     // Button background
     const bg = this.add.graphics();
-    bg.fillStyle(0x2d1a4c, 0.9);
-    bg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 10);
-    bg.lineStyle(2, 0x00ff88, 0.8);
-    bg.strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 10);
+    bg.fillStyle(0x1a0533, 0.9);
+    bg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 12);
+    bg.lineStyle(2, accentColor, 0.8);
+    bg.strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 12);
     
     // Button text
     const buttonText = this.add.text(0, 0, text, {
-      fontFamily: '"Courier New", monospace',
-      fontSize: '18px',
-      color: '#00ff88'
+      fontFamily: 'Georgia, serif',
+      fontSize: '15px',
+      color: Phaser.Display.Color.IntegerToColor(accentColor).rgba
     }).setOrigin(0.5);
     
-    container.add([bg, buttonText]);
+    container.add([glow, bg, buttonText]);
     
-    // Make interactive
-    const hitArea = new Phaser.Geom.Rectangle(
-      -buttonWidth / 2, -buttonHeight / 2,
-      buttonWidth, buttonHeight
-    );
-    
+    const hitArea = new Phaser.Geom.Rectangle(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight);
     container.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
     
     container.on('pointerover', () => {
-      bg.clear();
-      bg.fillStyle(0x3d2a5c, 1);
-      bg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 10);
-      bg.lineStyle(3, 0x00ff88, 1);
-      bg.strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 10);
+      glow.clear();
+      glow.fillStyle(accentColor, 0.35);
+      glow.fillRoundedRect(-buttonWidth / 2 - 8, -buttonHeight / 2 - 8, buttonWidth + 16, buttonHeight + 16, 18);
       buttonText.setColor('#ffffff');
+      this.tweens.add({
+        targets: container,
+        scaleX: 1.05,
+        scaleY: 1.05,
+        duration: 100
+      });
     });
     
     container.on('pointerout', () => {
-      bg.clear();
-      bg.fillStyle(0x2d1a4c, 0.9);
-      bg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 10);
-      bg.lineStyle(2, 0x00ff88, 0.8);
-      bg.strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 10);
-      buttonText.setColor('#00ff88');
+      glow.clear();
+      glow.fillStyle(accentColor, 0.2);
+      glow.fillRoundedRect(-buttonWidth / 2 - 5, -buttonHeight / 2 - 5, buttonWidth + 10, buttonHeight + 10, 15);
+      buttonText.setColor(Phaser.Display.Color.IntegerToColor(accentColor).rgba);
+      this.tweens.add({
+        targets: container,
+        scaleX: 1,
+        scaleY: 1,
+        duration: 100
+      });
     });
     
     container.on('pointerdown', callback);
@@ -199,30 +202,36 @@ export class MenuScene extends Phaser.Scene {
     return container;
   }
   
-  createBackgroundAnimation() {
-    // Animated sperms swimming in background
-    this.bgSperms = [];
+  createFloatingPods() {
+    // Cute floating pods in background
+    this.bgPods = [];
+    const colors = [
+      GAME_CONFIG.COLORS.RIVAL_PINK,
+      GAME_CONFIG.COLORS.RIVAL_ORANGE,
+      GAME_CONFIG.COLORS.RIVAL_PURPLE,
+      GAME_CONFIG.COLORS.RIVAL_BLUE,
+      GAME_CONFIG.COLORS.PLAYER_CORE
+    ];
     
-    for (let i = 0; i < 8; i++) {
-      const sperm = this.add.graphics();
-      const x = Math.random() * this.cameras.main.width;
-      const y = Math.random() * this.cameras.main.height;
-      
-      this.bgSperms.push({
-        graphics: sperm,
-        x: x,
-        y: y,
-        speed: 30 + Math.random() * 50,
-        angle: -90 + (Math.random() - 0.5) * 40,
-        size: 0.5 + Math.random() * 0.5,
-        alpha: 0.1 + Math.random() * 0.2
+    for (let i = 0; i < 10; i++) {
+      const pod = this.add.graphics();
+      this.bgPods.push({
+        graphics: pod,
+        x: Math.random() * this.cameras.main.width,
+        y: Math.random() * this.cameras.main.height,
+        speed: 20 + Math.random() * 40,
+        angle: -90 + (Math.random() - 0.5) * 50,
+        size: 0.4 + Math.random() * 0.5,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        alpha: 0.15 + Math.random() * 0.25,
+        wobble: Math.random() * Math.PI * 2
       });
     }
   }
   
   loadProgress() {
     try {
-      const saved = localStorage.getItem('spermrunner_progress');
+      const saved = localStorage.getItem('streamracer_progress');
       if (saved) {
         const data = JSON.parse(saved);
         
@@ -234,9 +243,7 @@ export class MenuScene extends Phaser.Scene {
         if (data.bestTime) {
           const minutes = Math.floor(data.bestTime / 60000);
           const seconds = Math.floor((data.bestTime % 60000) / 1000);
-          this.bestTimeText.setText(
-            `Best Time: ${minutes}:${seconds.toString().padStart(2, '0')}`
-          );
+          this.bestTimeText.setText(`🏆 Best: ${minutes}:${seconds.toString().padStart(2, '0')}`);
         }
       }
     } catch (e) {
@@ -245,20 +252,19 @@ export class MenuScene extends Phaser.Scene {
   }
   
   startGame() {
-    // Clear saved progress
-    localStorage.removeItem('spermrunner_progress');
+    localStorage.removeItem('streamracer_progress');
     
-    this.cameras.main.fadeOut(500, 0, 0, 0);
-    this.time.delayedCall(500, () => {
+    this.cameras.main.fadeOut(400, 0, 0, 0);
+    this.time.delayedCall(400, () => {
       this.scene.start('GameScene', { stage: 1 });
     });
   }
   
   continueGame() {
     if (this.savedProgress) {
-      this.cameras.main.fadeOut(500, 0, 0, 0);
-      this.time.delayedCall(500, () => {
-        this.scene.start('GameScene', { 
+      this.cameras.main.fadeOut(400, 0, 0, 0);
+      this.time.delayedCall(400, () => {
+        this.scene.start('GameScene', {
           stage: this.savedProgress.currentStage,
           elapsedTime: this.savedProgress.elapsedTime || 0
         });
@@ -270,37 +276,36 @@ export class MenuScene extends Phaser.Scene {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
     
-    // Tutorial overlay
     const overlay = this.add.graphics();
-    overlay.fillStyle(0x000000, 0.9);
-    overlay.fillRect(0, 0, width, height);
+    overlay.fillStyle(0x0d1b2a, 0.95);
+    overlay.fillRoundedRect(20, height * 0.1, width - 40, height * 0.8, 20);
     overlay.setDepth(100);
     
     const tutorialText = [
-      'HOW TO PLAY',
+      '🎮 HOW TO PLAY',
       '',
-      'Touch & drag on the left side to steer',
-      'Tap the BOOST button for speed burst',
+      '👆 Touch & drag to steer your pod',
+      '⚡ Tap BOOST for a speed burst',
       '',
-      'Bump into rivals to knock them off course',
-      'Avoid obstacles and currents',
-      'Collect powerups for advantages',
+      '💥 Bump rivals to slow them down',
+      '🌀 Avoid obstacles & currents',
+      '✨ Collect powerups for bonuses',
       '',
-      'Race through 8 stages to reach the EGG!',
+      '🎯 Race through 8 stages',
+      '💫 Reach the Energy Core!',
       '',
-      'Tap anywhere to close'
+      '[ Tap anywhere to close ]'
     ];
     
     const text = this.add.text(width / 2, height / 2, tutorialText.join('\n'), {
-      fontFamily: '"Courier New", monospace',
-      fontSize: '16px',
+      fontFamily: 'Georgia, serif',
+      fontSize: '14px',
       color: '#ffffff',
       align: 'center',
-      lineSpacing: 8
+      lineSpacing: 6
     }).setOrigin(0.5);
     text.setDepth(101);
     
-    // Close on tap
     overlay.setInteractive(new Phaser.Geom.Rectangle(0, 0, width, height), Phaser.Geom.Rectangle.Contains);
     overlay.on('pointerdown', () => {
       overlay.destroy();
@@ -312,49 +317,58 @@ export class MenuScene extends Phaser.Scene {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
     
-    // Update background particles
+    // Animate sparkles
     this.particleGraphics.clear();
     for (const p of this.particles) {
       p.y -= p.speed * (delta / 1000);
+      p.twinkle += delta * 0.005;
+      
       if (p.y < -10) {
         p.y = height + 10;
         p.x = Math.random() * width;
       }
       
-      this.particleGraphics.fillStyle(0xffffff, p.alpha);
+      const twinkleAlpha = p.alpha * (0.5 + Math.sin(p.twinkle) * 0.5);
+      this.particleGraphics.fillStyle(0xffffff, twinkleAlpha);
       this.particleGraphics.fillCircle(p.x, p.y, p.size);
     }
     
-    // Update background sperms
-    for (const sperm of this.bgSperms) {
-      const angleRad = Phaser.Math.DegToRad(sperm.angle);
-      sperm.x += Math.cos(angleRad) * sperm.speed * (delta / 1000);
-      sperm.y += Math.sin(angleRad) * sperm.speed * (delta / 1000);
+    // Animate floating pods
+    for (const pod of this.bgPods) {
+      const angleRad = Phaser.Math.DegToRad(pod.angle);
+      pod.x += Math.cos(angleRad) * pod.speed * (delta / 1000);
+      pod.y += Math.sin(angleRad) * pod.speed * (delta / 1000);
+      pod.wobble += delta * 0.003;
       
-      // Wrap around screen
-      if (sperm.y < -50) {
-        sperm.y = height + 50;
-        sperm.x = Math.random() * width;
+      // Wrap around
+      if (pod.y < -50) {
+        pod.y = height + 50;
+        pod.x = Math.random() * width;
       }
+      if (pod.x < -50) pod.x = width + 50;
+      if (pod.x > width + 50) pod.x = -50;
       
-      // Draw sperm
-      sperm.graphics.clear();
-      sperm.graphics.setPosition(sperm.x, sperm.y);
-      sperm.graphics.setAngle(sperm.angle + 90);
+      // Draw cute pod
+      pod.graphics.clear();
+      pod.graphics.setPosition(pod.x, pod.y);
       
-      // Tail
-      sperm.graphics.lineStyle(2 * sperm.size, 0x00ff88, sperm.alpha * 0.5);
-      sperm.graphics.beginPath();
-      sperm.graphics.moveTo(0, 0);
+      // Trail ribbon
+      pod.graphics.lineStyle(3 * pod.size, pod.color, pod.alpha * 0.4);
+      pod.graphics.beginPath();
+      pod.graphics.moveTo(0, 0);
       for (let i = 1; i <= 4; i++) {
-        const waveX = Math.sin(time * 0.005 + i) * 3 * sperm.size;
-        sperm.graphics.lineTo(waveX, i * 5 * sperm.size);
+        const wave = Math.sin(pod.wobble + i) * 4 * pod.size;
+        pod.graphics.lineTo(wave, i * 8 * pod.size);
       }
-      sperm.graphics.strokePath();
+      pod.graphics.strokePath();
       
-      // Head
-      sperm.graphics.fillStyle(0x00ff88, sperm.alpha);
-      sperm.graphics.fillEllipse(0, -5 * sperm.size, 8 * sperm.size, 12 * sperm.size);
+      // Body
+      pod.graphics.fillStyle(pod.color, pod.alpha);
+      pod.graphics.fillEllipse(0, -5 * pod.size, 8 * pod.size, 12 * pod.size);
+      
+      // Eye highlight
+      pod.graphics.fillStyle(0xffffff, pod.alpha * 0.6);
+      pod.graphics.fillCircle(-1 * pod.size, -7 * pod.size, 2 * pod.size);
     }
   }
 }

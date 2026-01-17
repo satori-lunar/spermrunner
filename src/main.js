@@ -96,4 +96,4 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-console.log('🏊 Spermrunner initialized! Race to the egg!');
+console.log('✨ StreamRacer initialized! Race to the Energy Core!');
