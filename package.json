@@ -1,0 +1,17 @@
+{
+  "name": "spermrunner",
+  "version": "1.0.0",
+  "description": "A mobile-friendly racing game where you compete as a sperm racing to the egg",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "phaser": "^3.70.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
