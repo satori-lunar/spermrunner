@@ -1,4 +1,4 @@
-// HUD - Whimsical heads-up display
+// HUD - Clean, minimal heads-up display (positioned outside tunnel)
 import { GAME_CONFIG, STAGE_CONFIG } from '../config/GameConfig.js';
 
 export class HUD {
@@ -7,31 +7,30 @@ export class HUD {
     
     this.container = scene.add.container(0, 0);
     this.container.setScrollFactor(0);
-    this.container.setDepth(900);
+    this.container.setDepth(850); // Below vignette
     
     this.createStageDisplay();
     this.createProgressBar();
     this.createBoostMeter();
     this.createPositionDisplay();
-    this.createTimeDisplay();
   }
   
   createStageDisplay() {
-    // Stage indicator with playful style
-    this.stageText = this.scene.add.text(20, 18, '✨ Stage 1', {
-      fontFamily: 'Georgia, serif',
-      fontSize: '18px',
-      color: '#00ffcc',
-      stroke: '#0d1b2a',
-      strokeThickness: 3
+    // Minimal stage indicator (top-left corner, small)
+    this.stageText = this.scene.add.text(12, 8, 'Stage 1', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '13px',
+      color: '#4fc3f7',
+      stroke: '#050a15',
+      strokeThickness: 2
     });
     
-    this.stageNameText = this.scene.add.text(20, 40, 'Gentle Stream', {
-      fontFamily: 'Georgia, serif',
-      fontSize: '12px',
-      color: '#80deea',
-      stroke: '#0d1b2a',
-      strokeThickness: 2
+    this.stageNameText = this.scene.add.text(12, 24, 'Gentle Stream', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '10px',
+      color: '#78909c',
+      stroke: '#050a15',
+      strokeThickness: 1
     });
     
     this.container.add([this.stageText, this.stageNameText]);
@@ -40,79 +39,51 @@ export class HUD {
   createProgressBar() {
     const width = this.scene.cameras.main.width;
     
-    // Progress bar with rounded ends
+    // Thin progress bar at very top
     this.progressBg = this.scene.add.graphics();
-    this.progressBg.fillStyle(0x1a0533, 0.8);
-    this.progressBg.fillRoundedRect(width / 2 - 80, 15, 160, 14, 7);
-    this.progressBg.lineStyle(1, 0x4fc3f7, 0.5);
-    this.progressBg.strokeRoundedRect(width / 2 - 80, 15, 160, 14, 7);
+    this.progressBg.fillStyle(0x1a2a3a, 0.6);
+    this.progressBg.fillRect(0, 0, width, 4);
     
     this.progressFill = this.scene.add.graphics();
     
-    this.progressLabel = this.scene.add.text(width / 2, 36, '0%', {
-      fontFamily: 'Georgia, serif',
-      fontSize: '11px',
-      color: '#80cbc4',
-      stroke: '#0d1b2a',
-      strokeThickness: 2
-    }).setOrigin(0.5, 0);
-    
-    this.container.add([this.progressBg, this.progressFill, this.progressLabel]);
+    this.container.add([this.progressBg, this.progressFill]);
   }
   
   createBoostMeter() {
     const width = this.scene.cameras.main.width;
     const height = this.scene.cameras.main.height;
     
-    // Boost meter near button
+    // Small boost indicator near button
     this.boostMeterBg = this.scene.add.graphics();
-    this.boostMeterBg.fillStyle(0x1a0533, 0.7);
-    this.boostMeterBg.fillRoundedRect(width - 115, height - 145, 50, 8, 4);
+    this.boostMeterBg.fillStyle(0x1a2a3a, 0.5);
+    this.boostMeterBg.fillRoundedRect(width - 95, height - 135, 40, 5, 2);
     
     this.boostMeterFill = this.scene.add.graphics();
     
-    this.boostLabel = this.scene.add.text(width - 90, height - 158, '⚡', {
-      fontSize: '14px'
-    }).setOrigin(0.5, 0);
-    
-    this.container.add([this.boostMeterBg, this.boostMeterFill, this.boostLabel]);
+    this.container.add([this.boostMeterBg, this.boostMeterFill]);
   }
   
   createPositionDisplay() {
     const width = this.scene.cameras.main.width;
     
-    // Position with medal colors
-    this.positionText = this.scene.add.text(width - 20, 18, '1st', {
-      fontFamily: 'Georgia, serif',
-      fontSize: '26px',
-      color: '#ffd700',
-      stroke: '#0d1b2a',
-      strokeThickness: 4
+    // Position indicator (top-right, subtle)
+    this.positionText = this.scene.add.text(width - 12, 10, '1st', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '16px',
+      color: '#ffd54f',
+      stroke: '#050a15',
+      strokeThickness: 2
     }).setOrigin(1, 0);
     
-    this.positionLabel = this.scene.add.text(width - 20, 48, 'of 5', {
-      fontFamily: 'Georgia, serif',
-      fontSize: '12px',
-      color: '#b0bec5',
-      stroke: '#0d1b2a',
-      strokeThickness: 2
+    this.positionLabel = this.scene.add.text(width - 12, 28, '/5', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '10px',
+      color: '#607d8b',
+      stroke: '#050a15',
+      strokeThickness: 1
     }).setOrigin(1, 0);
     
     this.container.add([this.positionText, this.positionLabel]);
-  }
-  
-  createTimeDisplay() {
-    const width = this.scene.cameras.main.width;
-    
-    this.timeText = this.scene.add.text(width / 2, 55, '⏱ 00:00', {
-      fontFamily: 'Georgia, serif',
-      fontSize: '13px',
-      color: '#e0e0e0',
-      stroke: '#0d1b2a',
-      strokeThickness: 2
-    }).setOrigin(0.5, 0);
-    
-    this.container.add(this.timeText);
   }
   
   update(data) {
@@ -123,66 +94,59 @@ export class HUD {
       boostProgress,
       canBoost,
       position,
-      totalRacers,
-      elapsedTime
+      totalRacers
     } = data;
     
+    const width = this.scene.cameras.main.width;
+    const height = this.scene.cameras.main.height;
+    
     // Stage
-    this.stageText.setText(`✨ Stage ${stage}`);
+    this.stageText.setText(`Stage ${stage}`);
     this.stageNameText.setText(stageName);
     
-    // Progress bar with gradient
-    const width = this.scene.cameras.main.width;
-    const progressWidth = Math.min(progress, 1) * 156;
+    // Progress bar (top edge)
+    const progressWidth = Math.min(progress, 1) * width;
     
     this.progressFill.clear();
-    if (progressWidth > 2) {
-      // Gradient from cyan to gold as progress increases
+    if (progressWidth > 0) {
+      // Gradient color based on progress
       const progressColor = Phaser.Display.Color.Interpolate.ColorWithColor(
-        { r: 0, g: 255, b: 204 },
-        { r: 255, g: 215, b: 0 },
+        { r: 79, g: 195, b: 247 },  // Cyan
+        { r: 255, g: 213, b: 79 },  // Gold
         100,
         Math.min(progress * 100, 100)
       );
       const hexColor = Phaser.Display.Color.GetColor(progressColor.r, progressColor.g, progressColor.b);
       
-      this.progressFill.fillStyle(hexColor, 0.9);
-      this.progressFill.fillRoundedRect(width / 2 - 78, 17, progressWidth, 10, 5);
+      this.progressFill.fillStyle(hexColor, 0.8);
+      this.progressFill.fillRect(0, 0, progressWidth, 4);
     }
-    
-    this.progressLabel.setText(`${Math.floor(progress * 100)}%`);
     
     // Boost meter
-    const height = this.scene.cameras.main.height;
-    const boostWidth = boostProgress * 46;
+    const boostWidth = boostProgress * 36;
     
     this.boostMeterFill.clear();
-    if (boostWidth > 2) {
-      const boostColor = canBoost ? 0x00ffcc : 0x607d8b;
-      this.boostMeterFill.fillStyle(boostColor, 0.9);
-      this.boostMeterFill.fillRoundedRect(width - 113, height - 143, boostWidth, 4, 2);
+    if (boostWidth > 0) {
+      const boostColor = canBoost ? 0x00e676 : 0x455a64;
+      this.boostMeterFill.fillStyle(boostColor, 0.8);
+      this.boostMeterFill.fillRoundedRect(width - 93, height - 133, boostWidth, 3, 1);
     }
     
-    // Position with color coding
-    const positionSuffix = this.getPositionSuffix(position);
-    this.positionText.setText(`${position}${positionSuffix}`);
-    this.positionLabel.setText(`of ${totalRacers}`);
+    // Position
+    const suffix = this.getPositionSuffix(position);
+    this.positionText.setText(`${position}${suffix}`);
+    this.positionLabel.setText(`/${totalRacers}`);
     
     // Medal colors
     if (position === 1) {
-      this.positionText.setColor('#ffd700'); // Gold
+      this.positionText.setColor('#ffd54f');
     } else if (position === 2) {
-      this.positionText.setColor('#c0c0c0'); // Silver
+      this.positionText.setColor('#b0bec5');
     } else if (position === 3) {
-      this.positionText.setColor('#cd7f32'); // Bronze
+      this.positionText.setColor('#ffab91');
     } else {
-      this.positionText.setColor('#90a4ae');
+      this.positionText.setColor('#78909c');
     }
-    
-    // Time
-    const minutes = Math.floor(elapsedTime / 60000);
-    const seconds = Math.floor((elapsedTime % 60000) / 1000);
-    this.timeText.setText(`⏱ ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
   }
   
   getPositionSuffix(position) {
@@ -196,44 +160,40 @@ export class HUD {
     const width = this.scene.cameras.main.width;
     const height = this.scene.cameras.main.height;
     
-    // Playful stage transition
+    // Subtle stage transition
     const overlay = this.scene.add.graphics();
     overlay.setScrollFactor(0);
-    overlay.setDepth(950);
-    overlay.fillStyle(0x0d1b2a, 0.85);
-    overlay.fillRoundedRect(30, height / 2 - 50, width - 60, 100, 20);
+    overlay.setDepth(900);
+    overlay.fillStyle(0x050a15, 0.7);
+    overlay.fillRoundedRect(width / 2 - 90, height / 2 - 35, 180, 70, 12);
     
-    const stageTitle = this.scene.add.text(width / 2, height / 2 - 15, `✨ STAGE ${stageNumber} ✨`, {
-      fontFamily: 'Georgia, serif',
-      fontSize: '28px',
-      color: '#00ffcc',
-      stroke: '#0d1b2a',
-      strokeThickness: 4
+    const stageTitle = this.scene.add.text(width / 2, height / 2 - 10, `Stage ${stageNumber}`, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '22px',
+      color: '#4fc3f7'
     }).setOrigin(0.5);
     stageTitle.setScrollFactor(0);
-    stageTitle.setDepth(951);
+    stageTitle.setDepth(901);
     
-    const nameText = this.scene.add.text(width / 2, height / 2 + 20, stageName, {
-      fontFamily: 'Georgia, serif',
-      fontSize: '16px',
-      color: '#ffffff'
+    const nameText = this.scene.add.text(width / 2, height / 2 + 15, stageName, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '13px',
+      color: '#90a4ae'
     }).setOrigin(0.5);
     nameText.setScrollFactor(0);
-    nameText.setDepth(951);
+    nameText.setDepth(901);
     
-    // Animate in
     this.scene.tweens.add({
       targets: [overlay, stageTitle, nameText],
       alpha: { from: 0, to: 1 },
-      duration: 300
+      duration: 250
     });
     
-    // Animate out
     this.scene.tweens.add({
       targets: [overlay, stageTitle, nameText],
       alpha: 0,
-      delay: 1800,
-      duration: 400,
+      delay: 1500,
+      duration: 350,
       onComplete: () => {
         overlay.destroy();
         stageTitle.destroy();
@@ -242,27 +202,26 @@ export class HUD {
     });
   }
   
-  showMessage(text, duration = 2000) {
+  showMessage(text, duration = 1500) {
     const width = this.scene.cameras.main.width;
     const height = this.scene.cameras.main.height;
     
-    const message = this.scene.add.text(width / 2, height / 2, text, {
-      fontFamily: 'Georgia, serif',
-      fontSize: '20px',
+    const message = this.scene.add.text(width / 2, height * 0.4, text, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '16px',
       color: '#ffffff',
-      stroke: '#0d1b2a',
-      strokeThickness: 3
+      stroke: '#050a15',
+      strokeThickness: 2
     }).setOrigin(0.5);
     message.setScrollFactor(0);
-    message.setDepth(951);
+    message.setDepth(901);
     
     this.scene.tweens.add({
       targets: message,
       alpha: 0,
-      y: height / 2 - 40,
-      scale: 1.2,
-      delay: duration - 400,
-      duration: 400,
+      y: height * 0.35,
+      delay: duration - 300,
+      duration: 300,
       onComplete: () => message.destroy()
     });
   }

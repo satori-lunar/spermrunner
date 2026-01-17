@@ -1,4 +1,4 @@
-// Rival Entity - Abstract colorful swimmer pods
+// Rival Entity - Energy racers with distinct trail styles
 import { GAME_CONFIG, RIVAL_ARCHETYPES } from '../config/GameConfig.js';
 
 export class Rival {
@@ -6,7 +6,7 @@ export class Rival {
     this.scene = scene;
     this.archetype = archetype;
     
-    // Create graphics
+    // Graphics layers
     this.trailGraphics = scene.add.graphics();
     this.glowGraphics = scene.add.graphics();
     this.bodyGraphics = scene.add.graphics();
@@ -36,68 +36,180 @@ export class Rival {
     this.targetLane = 0;
     this.bumpCooldown = 0;
     
-    // Trail
+    // Trail with style variation
     this.trail = [];
-    this.maxTrailLength = 15;
+    this.maxTrailLength = 20;
+    this.trailStyle = this.getTrailStyle();
     
     // Animation
     this.animTime = Math.random() * 1000;
-    this.bobOffset = Math.random() * Math.PI * 2;
+    this.pulseOffset = Math.random() * Math.PI * 2;
     
     // Random variation
     this.speedVariation = 0.9 + Math.random() * 0.2;
   }
   
+  getTrailStyle() {
+    // Different trail styles based on archetype
+    switch (this.archetype.name) {
+      case 'swift': return 'zigzag';
+      case 'steady': return 'solid';
+      case 'bouncy': return 'pulse';
+      case 'floaty': return 'wave';
+      default: return 'solid';
+    }
+  }
+  
   draw() {
     const color = this.archetype.color;
-    const alpha = this.isStunned ? 0.5 : 1;
+    const alpha = this.isStunned ? 0.4 : 1;
     
     this.trailGraphics.clear();
     this.glowGraphics.clear();
     this.bodyGraphics.clear();
     
-    // Draw flowing trail
-    if (this.trail.length > 1) {
-      for (let i = 1; i < this.trail.length; i++) {
-        const t = i / this.trail.length;
-        const trailAlpha = (1 - t) * 0.4 * alpha;
-        const width = (1 - t) * 5 + 1;
-        
-        this.trailGraphics.lineStyle(width, color, trailAlpha);
-        this.trailGraphics.lineBetween(
-          this.trail[i - 1].x, this.trail[i - 1].y,
-          this.trail[i].x, this.trail[i].y
-        );
-      }
-    }
+    // Draw styled trail
+    this.drawStyledTrail(color, alpha);
     
     // Outer glow
-    const glowPulse = 1 + Math.sin(this.animTime * 0.006 + this.bobOffset) * 0.15;
-    this.glowGraphics.fillStyle(color, 0.25 * alpha);
-    this.glowGraphics.fillCircle(this.x, this.y, 18 * glowPulse);
+    const glowPulse = 1 + Math.sin(this.animTime * 0.005 + this.pulseOffset) * 0.15;
     
-    // Main body - cute rounded pod
+    this.glowGraphics.fillStyle(color, 0.1 * alpha);
+    this.glowGraphics.fillCircle(this.x, this.y, 22 * glowPulse);
+    
+    this.glowGraphics.fillStyle(color, 0.2 * alpha);
+    this.glowGraphics.fillCircle(this.x, this.y, 15 * glowPulse);
+    
+    // Main body - capsule shape
     const angleRad = Phaser.Math.DegToRad(this.angle);
     
     this.bodyGraphics.save();
     this.bodyGraphics.translateCanvas(this.x, this.y);
     this.bodyGraphics.rotateCanvas(angleRad + Math.PI / 2);
     
-    // Pod body
+    // Capsule body
     this.bodyGraphics.fillStyle(color, alpha);
-    this.bodyGraphics.fillEllipse(0, 0, 10, 16);
+    this.bodyGraphics.fillRoundedRect(-5, -9, 10, 18, 5);
     
     // Highlight
-    this.bodyGraphics.fillStyle(0xffffff, 0.4 * alpha);
-    this.bodyGraphics.fillEllipse(-1, -3, 3, 5);
+    this.bodyGraphics.fillStyle(0xffffff, 0.5 * alpha);
+    this.bodyGraphics.fillRoundedRect(-3, -7, 3, 10, 1.5);
     
-    // Eye
-    this.bodyGraphics.fillStyle(0xffffff, 0.8 * alpha);
-    this.bodyGraphics.fillCircle(0, -4, 3);
-    this.bodyGraphics.fillStyle(0x333333, alpha);
-    this.bodyGraphics.fillCircle(0, -4, 1.5);
+    // Energy core
+    const corePulse = 0.5 + Math.sin(this.animTime * 0.008 + this.pulseOffset) * 0.3;
+    this.bodyGraphics.fillStyle(0xffffff, corePulse * alpha);
+    this.bodyGraphics.fillCircle(0, 0, 3);
     
     this.bodyGraphics.restore();
+  }
+  
+  drawStyledTrail(color, alpha) {
+    if (this.trail.length < 2) return;
+    
+    switch (this.trailStyle) {
+      case 'zigzag':
+        this.drawZigzagTrail(color, alpha);
+        break;
+      case 'pulse':
+        this.drawPulseTrail(color, alpha);
+        break;
+      case 'wave':
+        this.drawWaveTrail(color, alpha);
+        break;
+      default:
+        this.drawSolidTrail(color, alpha);
+    }
+  }
+  
+  drawSolidTrail(color, alpha) {
+    // Steady, consistent trail
+    for (let i = 1; i < this.trail.length; i++) {
+      const t = i / this.trail.length;
+      const trailAlpha = (1 - t) * 0.5 * alpha;
+      const width = (1 - t) * 6 + 1;
+      
+      this.trailGraphics.lineStyle(width, color, trailAlpha);
+      this.trailGraphics.lineBetween(
+        this.trail[i - 1].x, this.trail[i - 1].y,
+        this.trail[i].x, this.trail[i].y
+      );
+    }
+  }
+  
+  drawZigzagTrail(color, alpha) {
+    // Swift - sharp zigzag pattern
+    for (let i = 1; i < this.trail.length; i++) {
+      const prev = this.trail[i - 1];
+      const curr = this.trail[i];
+      const t = i / this.trail.length;
+      const trailAlpha = (1 - t) * 0.6 * alpha;
+      const width = (1 - t) * 5 + 1;
+      
+      // Calculate perpendicular for zigzag
+      const dx = curr.x - prev.x;
+      const dy = curr.y - prev.y;
+      const len = Math.sqrt(dx * dx + dy * dy) || 1;
+      const perpX = -dy / len;
+      const perpY = dx / len;
+      
+      // Alternating zigzag
+      const zigOffset = (i % 2 === 0 ? 1 : -1) * 6 * (1 - t);
+      
+      this.trailGraphics.lineStyle(width, color, trailAlpha);
+      this.trailGraphics.lineBetween(
+        prev.x + perpX * zigOffset, prev.y + perpY * zigOffset,
+        curr.x - perpX * zigOffset, curr.y - perpY * zigOffset
+      );
+    }
+  }
+  
+  drawPulseTrail(color, alpha) {
+    // Bouncy - pulsing thickness
+    for (let i = 1; i < this.trail.length; i++) {
+      const t = i / this.trail.length;
+      const trailAlpha = (1 - t) * 0.55 * alpha;
+      
+      // Pulsing width
+      const pulse = Math.sin(this.animTime * 0.015 + i * 0.5) * 0.5 + 0.5;
+      const width = ((1 - t) * 8 + 2) * (0.5 + pulse * 0.5);
+      
+      this.trailGraphics.lineStyle(width, color, trailAlpha);
+      this.trailGraphics.lineBetween(
+        this.trail[i - 1].x, this.trail[i - 1].y,
+        this.trail[i].x, this.trail[i].y
+      );
+      
+      // Pulse glow dots
+      if (i % 4 === 0) {
+        this.trailGraphics.fillStyle(0xffffff, trailAlpha * pulse);
+        this.trailGraphics.fillCircle(this.trail[i].x, this.trail[i].y, 2);
+      }
+    }
+  }
+  
+  drawWaveTrail(color, alpha) {
+    // Floaty - smooth wave pattern
+    for (let i = 1; i < this.trail.length; i++) {
+      const prev = this.trail[i - 1];
+      const curr = this.trail[i];
+      const t = i / this.trail.length;
+      const trailAlpha = (1 - t) * 0.45 * alpha;
+      const width = (1 - t) * 5 + 1;
+      
+      // Smooth wave offset
+      const wave = Math.sin(this.animTime * 0.004 + i * 0.3) * 8 * t;
+      const dx = curr.x - prev.x;
+      const dy = curr.y - prev.y;
+      const len = Math.sqrt(dx * dx + dy * dy) || 1;
+      const perpX = -dy / len;
+      const perpY = dx / len;
+      
+      this.trailGraphics.lineStyle(width, color, trailAlpha);
+      this.trailGraphics.lineBetween(
+        prev.x + perpX * wave, prev.y + perpY * wave,
+        curr.x + perpX * wave, curr.y + perpY * wave
+      );
+    }
   }
   
   update(delta, player, trackBounds, obstacles, speedMultiplier = 1.0, aggressionMultiplier = 1.0) {
@@ -112,21 +224,17 @@ export class Rival {
       }
     }
     
-    // Update bump cooldown
     if (this.bumpCooldown > 0) {
       this.bumpCooldown -= delta;
     }
     
-    // AI behavior
+    // AI
     this.updateAI(player, trackBounds, obstacles, aggressionMultiplier);
     
-    // Calculate speed
+    // Speed
     let targetSpeed = this.baseSpeed * speedMultiplier * this.speedVariation;
-    if (this.isStunned) {
-      targetSpeed *= 0.3;
-    }
+    if (this.isStunned) targetSpeed *= 0.3;
     
-    // Accelerate
     const accel = GAME_CONFIG.PLAYER.ACCELERATION * 0.8;
     if (this.speed < targetSpeed) {
       this.speed = Math.min(this.speed + accel * dt, targetSpeed);
@@ -134,20 +242,19 @@ export class Rival {
       this.speed = Math.max(this.speed - accel * 0.5 * dt, targetSpeed);
     }
     
-    // Convert to velocity
+    // Velocity
     const angleRad = Phaser.Math.DegToRad(this.angle);
     this.velocity.x = Math.cos(angleRad) * this.speed;
     this.velocity.y = Math.sin(angleRad) * this.speed;
     
-    // Apply movement
+    // Movement
     this.x += (this.velocity.x + this.knockbackVelocity.x) * dt;
     this.y += (this.velocity.y + this.knockbackVelocity.y) * dt;
     
-    // Decay knockback
     this.knockbackVelocity.x *= 0.92;
     this.knockbackVelocity.y *= 0.92;
     
-    // Constrain to track
+    // Track bounds
     if (trackBounds) {
       const margin = this.size / 2;
       this.x = Phaser.Math.Clamp(this.x, trackBounds.left + margin, trackBounds.right - margin);
@@ -158,13 +265,12 @@ export class Rival {
       }
     }
     
-    // Update trail
+    // Trail
     this.trail.unshift({ x: this.x, y: this.y });
     while (this.trail.length > this.maxTrailLength) {
       this.trail.pop();
     }
     
-    // Draw
     this.draw();
   }
   
@@ -173,10 +279,9 @@ export class Rival {
     
     let targetAngle = -90;
     
-    // Stay in lane
     if (trackBounds) {
       const trackCenter = (trackBounds.left + trackBounds.right) / 2;
-      const laneOffset = this.targetLane * 35;
+      const laneOffset = this.targetLane * 30;
       const targetX = trackCenter + laneOffset;
       
       const dx = targetX - this.x;
@@ -184,7 +289,7 @@ export class Rival {
         targetAngle += Math.sign(dx) * 12;
       }
       
-      if (Math.random() < 0.006) {
+      if (Math.random() < 0.007) {
         this.targetLane = Math.floor(Math.random() * 5) - 2;
       }
     }
@@ -195,10 +300,10 @@ export class Rival {
       const dy = player.y - this.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
       
-      if (dist < 80 && Math.random() < this.bumpProbability * effectiveAggression) {
+      if (dist < 70 && Math.random() < this.bumpProbability * effectiveAggression) {
         const angleToPlayer = Math.atan2(dy, dx) * (180 / Math.PI);
-        targetAngle = Phaser.Math.Linear(targetAngle, angleToPlayer, 0.4);
-        this.bumpCooldown = 800;
+        targetAngle = Phaser.Math.Linear(targetAngle, angleToPlayer, 0.35);
+        this.bumpCooldown = 700;
       }
     }
     
@@ -209,14 +314,13 @@ export class Rival {
         const dy = obs.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         
-        if (dist < 70) {
+        if (dist < 60) {
           const avoidAngle = Math.atan2(-dy, -dx) * (180 / Math.PI);
           targetAngle = Phaser.Math.Linear(targetAngle, avoidAngle, 0.25);
         }
       }
     }
     
-    // Smoothly rotate
     const angleDiff = Phaser.Math.Angle.ShortestBetween(this.angle, targetAngle);
     this.angle += angleDiff * this.turnSpeed * 0.04;
   }
