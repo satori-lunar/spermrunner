@@ -110,27 +110,28 @@ export class Player {
       }
     }
     
-    // Handle steering input (-1 to 1)
-    if (input.steerX !== 0) {
-      this.angle += input.steerX * this.turnSpeed * dt * 60;
-    }
+    // Smooth steering - directly use input for fluid control
+    // The input is already smoothed in TouchControls
+    const steerAmount = input.steerX * this.turnSpeed * dt * 60;
+    this.angle += steerAmount;
     
-    // Calculate target speed
+    // Add slight visual tilt based on steering
+    this.visualTilt = Phaser.Math.Linear(this.visualTilt || 0, input.steerX * 15, 0.1);
+    
+    // Calculate target speed - always moving forward automatically
     let targetSpeed = this.baseSpeed * speedMultiplier;
     if (this.isBoosting) {
       targetSpeed *= this.boostMultiplier;
     }
     
-    // Apply forward thrust (always moving forward)
-    const forwardInput = 0.8 + (input.throttle || 0) * 0.2;
+    // Auto-forward with slight boost when actively steering
+    const isActivelyControlling = Math.abs(input.steerX) > 0.1 || input.throttle > 0;
+    const forwardInput = isActivelyControlling ? 1.0 : 0.85;
     targetSpeed *= forwardInput;
     
-    // Accelerate towards target speed
-    if (this.speed < targetSpeed) {
-      this.speed = Math.min(this.speed + this.acceleration * dt, targetSpeed);
-    } else {
-      this.speed = Math.max(this.speed - this.acceleration * 0.5 * dt, targetSpeed);
-    }
+    // Smooth acceleration
+    const accelRate = this.speed < targetSpeed ? this.acceleration : this.acceleration * 0.3;
+    this.speed = Phaser.Math.Linear(this.speed, targetSpeed, accelRate * dt);
     
     // Cap at max speed
     this.speed = Math.min(this.speed, this.maxSpeed * speedMultiplier);
@@ -162,9 +163,12 @@ export class Player {
       }
     }
     
-    // Update visual
+    // Update visual position
     this.container.setPosition(this.x, this.y);
-    this.container.setAngle(this.angle + 90);
+    
+    // Combine movement angle with visual tilt for responsive feel
+    const displayAngle = this.angle + 90 + (this.visualTilt || 0);
+    this.container.setAngle(displayAngle);
     
     // Redraw with current state
     this.drawSperm();

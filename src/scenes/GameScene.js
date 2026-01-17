@@ -216,8 +216,8 @@ export class GameScene extends Phaser.Scene {
     this.elapsedTime += delta;
     this.stageStartTime += delta;
     
-    // Update controls
-    this.controls.update();
+    // Update controls with delta for smooth interpolation
+    this.controls.update(delta);
     const input = this.controls.getInput();
     
     // Handle boost
