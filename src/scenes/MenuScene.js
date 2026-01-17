@@ -57,22 +57,25 @@ export class MenuScene extends Phaser.Scene {
     const height = this.cameras.main.height;
     const colors = GAME_CONFIG.COLORS;
     
+    // Responsive title size
+    const titleSize = Math.min(32, width * 0.08);
+    
     // Title glow
-    this.titleGlow = this.add.text(width / 2, height * 0.13, 'STREAMRACER', {
-      fontFamily: '"Comic Sans MS", "Marker Felt", fantasy',
-      fontSize: '36px',
+    this.titleGlow = this.add.text(width / 2, height * 0.12, 'STREAMRACER', {
+      fontFamily: 'Georgia, serif',
+      fontSize: `${titleSize}px`,
       color: '#00ffcc',
       stroke: '#00ffcc',
-      strokeThickness: 8
+      strokeThickness: 6
     }).setOrigin(0.5).setAlpha(0.3);
     
     // Main title
-    this.title = this.add.text(width / 2, height * 0.13, 'STREAMRACER', {
-      fontFamily: '"Comic Sans MS", "Marker Felt", fantasy',
-      fontSize: '36px',
+    this.title = this.add.text(width / 2, height * 0.12, 'STREAMRACER', {
+      fontFamily: 'Georgia, serif',
+      fontSize: `${titleSize}px`,
       color: '#ffffff',
       stroke: '#1a0533',
-      strokeThickness: 4
+      strokeThickness: 3
     }).setOrigin(0.5);
     
     // Subtitle
@@ -95,7 +98,7 @@ export class MenuScene extends Phaser.Scene {
     // Floating title animation
     this.tweens.add({
       targets: [this.title, this.titleGlow],
-      y: height * 0.13 + 5,
+      y: height * 0.12 + 5,
       duration: 2000,
       yoyo: true,
       repeat: -1,
